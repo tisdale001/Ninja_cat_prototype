@@ -88,6 +88,7 @@ class Game:
 
         # Player Settings
         self.playerRunSpeed = 8
+        self.playerPunchSpeed = 4
         self.playerFallingSpeed = 10
         self.curYDirection = 1 # must be 1 or -1
         self.curXDirection = 1 # must be 1 or -1
@@ -113,6 +114,8 @@ class Game:
         self.playerCannotBeHitTimer = 0
         self.playerCannotBeHitMax = 30
         self.playerJumpingFrameIncrement = 0.25
+
+        self.isPunching = False
 
         # Game Variables
         self.player.xVel = self.playerRunSpeed
@@ -188,6 +191,18 @@ class Game:
         self.falling_left.loadImage('Assets/spritesheets/black-cat-jumping-left-transparent.png', self.sdl.getSDLRenderer())
         self.maxFrameDict[str(self.falling_left)] = 0
 
+        self.punch_right = engine.Sprite(self.playerTransform, True)
+        self.punch_right.setRectangleDimensions(80, 110)
+        self.punch_right.setSpriteSheetDimensions(1300, 998, 162, 200, 3, 3, 660)
+        self.punch_right.loadImage('Assets/spritesheets/black-cat-game-sprite/black_cat_upright/black_cat_upright_transparent.png', self.sdl.getSDLRenderer())
+        self.maxFrameDict[str(self.punch_right)] = 2
+
+        self.punch_left = engine.Sprite(self.playerTransform, False)
+        self.punch_left.setRectangleDimensions(80, 110)
+        self.punch_left.setSpriteSheetDimensions(1280, 998, -258 + 1300 * 3, 200, 3, 3, 662)
+        self.punch_left.loadImage('Assets/spritesheets/black-cat-game-sprite/black_cat_upright/black_cat_upright_left_transparent.png', self.sdl.getSDLRenderer())
+        self.maxFrameDict[str(self.punch_left)] = 2
+
     
     def changePlayerSprite(self, sprite):
         # adjusts yPos if necessary and changes sprite
@@ -199,10 +214,26 @@ class Game:
     # Handles player left and right movement from input
     def handlePlayerMove(self, inputs):
         jumpAgain = False
-        if inputs[engine.J_PRESSED] and self.jumpTimer <= 0:
+        if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
             jumpAgain = True
         if (inputs[engine.LEFT_PRESSED] or inputs[engine.A_PRESSED]) and not (inputs[engine.RIGHT_PRESSED] or inputs[engine.D_PRESSED]):
-            if self.playerState.getState() == "standing":
+            if self.playerState.getState() == "standing" and self.isPunching:
+                self.curXDirection = -1
+                self.player.xVel = - self.playerPunchSpeed
+                self.player.yVel = self.playerFallingSpeed * self.curYDirection
+                if self.isFirstStandingFrame:
+                    self.playerTransform.yPos -= self.diffBetweenStandingAndDucking
+                    self.isFirstStandingFrame = False
+                    # change to running left
+                    self.changePlayerSprite(self.punch_left)
+                    self.waitOneFrameForShot = True
+                elif jumpAgain:
+                    
+                    self.changePlayerSprite(self.falling_left)
+                else:
+                    self.changePlayerSprite(self.punch_left)
+                    self.waitOneFrameForShot = True
+            elif self.playerState.getState() == "standing":
                 self.curXDirection = -1
                 self.player.xVel = - self.playerRunSpeed
                 self.player.yVel = self.playerFallingSpeed * self.curYDirection
@@ -230,7 +261,20 @@ class Game:
                 self.waitOneFrameForShot = True
 
         elif (inputs[engine.RIGHT_PRESSED] or inputs[engine.D_PRESSED]) and not (inputs[engine.LEFT_PRESSED] or inputs[engine.A_PRESSED]):
-            if self.playerState.getState() == "standing":
+            if self.playerState.getState() == "standing" and self.isPunching:
+                self.curXDirection = 1
+                self.player.xVel = self.playerPunchSpeed
+                self.player.yVel = self.playerFallingSpeed * self.curYDirection
+                if self.isFirstStandingFrame:
+                    self.isFirstStandingFrame = False
+                    self.changePlayerSprite(self.punch_right)
+                    self.waitOneFrameForShot = True
+                elif jumpAgain:
+                    self.changePlayerSprite(self.falling_right)
+                else:
+                    self.changePlayerSprite(self.punch_right)
+                    self.waitOneFrameForShot = True
+            elif self.playerState.getState() == "standing":
                 self.curXDirection = 1
                 self.player.xVel = self.playerRunSpeed
                 self.player.yVel = self.playerFallingSpeed * self.curYDirection
@@ -259,7 +303,26 @@ class Game:
 
         else:
             # player does not move along x-axis
-            if self.playerState.getState() == "standing":
+            if self.playerState.getState() == "standing" and self.isPunching:
+                self.player.xVel = 0
+                if self.curXDirection > 0:
+                    if jumpAgain:
+                        self.changePlayerSprite(self.falling_right)
+                    elif self.isFirstStandingFrame:
+                        self.isFirstStandingFrame = False
+                        self.changePlayerSprite(self.punch_right)
+                    else:
+                        self.changePlayerSprite(self.punch_right)
+
+                else:
+                    if jumpAgain:
+                        self.changePlayerSprite(self.falling_left)
+                    elif self.isFirstStandingFrame:
+                        self.isFirstStandingFrame = False
+                        self.changePlayerSprite(self.punch_left)
+                    else:
+                        self.changePlayerSprite(self.punch_left)
+            elif self.playerState.getState() == "standing":
                 self.player.xVel = 0
                 if self.curXDirection > 0:
                     if jumpAgain:
@@ -332,7 +395,7 @@ class Game:
             if not self.playerJump.stillJumping() and not wait:
                 # change to falling
                 self.changeToFalling(inputs)
-            elif inputs[engine.J_PRESSED] and self.jumpTimer <= 0:
+            elif inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
                 # continue jump
                 self.playerJump.Update(self.player)
                 if self.uprightJump:
@@ -350,7 +413,7 @@ class Game:
                 self.playerState.setState("falling")
                 self.changeToFalling(inputs)
         else:
-            if inputs[engine.J_PRESSED] and currentState == "standing":
+            if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and currentState == "standing":
                 if self.jumpTimer <= 0:
                     self.player.InitiateJump()
                     self.currentFrame = 0
@@ -434,7 +497,7 @@ class Game:
         self.playerState.setState("standing")
         jumpAgain = False
         # aimUp = False
-        if inputs[engine.J_PRESSED] and self.jumpTimer <= 0:
+        if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
             jumpAgain = True
         if inputs[engine.RIGHT_PRESSED] or inputs[engine.D_PRESSED]:
             if jumpAgain:
@@ -491,6 +554,12 @@ class Game:
                 self.uprightJump = False
                 self.changeToFalling(inputs)
 
+    def handlePlayerPunching(self, inputs):
+        if (inputs[engine.H_PRESSED] or inputs[engine.K_PRESSED] or inputs[engine.X_PRESSED]):
+            self.isPunching = True
+        else:
+            self.isPunching = False
+
 
                     
     # Handles all player associated updates
@@ -506,6 +575,7 @@ class Game:
         self.physics.UpdateY(self.player)
         collisionFloor = self.handlePlayerFloorCollision(inputs)
         self.handlePlayerCeilingCollision(inputs)
+        self.handlePlayerPunching(inputs)
         
         # update frame
         if self.currentFrame > self.currentMaxFrame:
@@ -535,7 +605,7 @@ class Game:
 
     # Render
     def Render(self):
-        # self.sdl.clear(60, 60, 60, 255) # TODO: Set background to black
+        # self.sdl.clear(60, 60, 60, 255) # This is code for gray background
         # self.sdl.clear(0, 0, 0, 0) # This is code for black background
         self.sdl.clear(255, 255, 255, 255) # This is code for white background
         self.tilemap.Render(self.sdl.getSDLRenderer(), self.camera.x, self.camera.y)

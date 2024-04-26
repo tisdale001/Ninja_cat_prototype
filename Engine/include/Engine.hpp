@@ -44,6 +44,8 @@ enum Key {
     H_TAPPED = 24,
     K_PRESSED = 25,
     K_TAPPED = 26,
+    Z_PRESSED = 27,
+    X_PRESSED = 28,
     TOTAL_KEYS
 };
 

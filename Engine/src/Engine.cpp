@@ -153,12 +153,14 @@ std::vector<bool> SDLGraphicsProgram::getInput() {
     inputs[D_PRESSED] = keys[SDL_SCANCODE_D];
     inputs[H_PRESSED] = keys[SDL_SCANCODE_H];
     inputs[K_PRESSED] = keys[SDL_SCANCODE_K];
+    inputs[X_PRESSED] = keys[SDL_SCANCODE_X];
     inputs[UP_PRESSED] = keys[SDL_SCANCODE_UP];
     inputs[DOWN_PRESSED] = keys[SDL_SCANCODE_DOWN];
     inputs[LEFT_PRESSED] = keys[SDL_SCANCODE_LEFT];
     inputs[RIGHT_PRESSED] = keys[SDL_SCANCODE_RIGHT];
     inputs[SPACE_PRESSED] = keys[SDL_SCANCODE_SPACE];
     inputs[J_PRESSED] = keys[SDL_SCANCODE_J];
+    inputs[Z_PRESSED] = keys[SDL_SCANCODE_Z];
     inputs[ESCAPE_PRESSED] = keys[SDL_SCANCODE_ESCAPE];
     // Save inputs for replay
     inputRecord.push_back(inputs);
