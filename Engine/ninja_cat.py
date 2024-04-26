@@ -214,7 +214,7 @@ class Game:
     # Handles player left and right movement from input
     def handlePlayerMove(self, inputs):
         jumpAgain = False
-        if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
+        if (inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED]) and self.jumpTimer <= 0:
             jumpAgain = True
         if (inputs[engine.LEFT_PRESSED] or inputs[engine.A_PRESSED]) and not (inputs[engine.RIGHT_PRESSED] or inputs[engine.D_PRESSED]):
             if self.playerState.getState() == "standing" and self.isPunching:
@@ -395,7 +395,7 @@ class Game:
             if not self.playerJump.stillJumping() and not wait:
                 # change to falling
                 self.changeToFalling(inputs)
-            elif inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
+            elif (inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED]) and self.jumpTimer <= 0:
                 # continue jump
                 self.playerJump.Update(self.player)
                 if self.uprightJump:
@@ -413,7 +413,7 @@ class Game:
                 self.playerState.setState("falling")
                 self.changeToFalling(inputs)
         else:
-            if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and currentState == "standing":
+            if (inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED]) and currentState == "standing":
                 if self.jumpTimer <= 0:
                     self.player.InitiateJump()
                     self.currentFrame = 0
@@ -497,7 +497,7 @@ class Game:
         self.playerState.setState("standing")
         jumpAgain = False
         # aimUp = False
-        if inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED] and self.jumpTimer <= 0:
+        if (inputs[engine.J_PRESSED] or inputs[engine.Z_PRESSED]) and self.jumpTimer <= 0:
             jumpAgain = True
         if inputs[engine.RIGHT_PRESSED] or inputs[engine.D_PRESSED]:
             if jumpAgain:
